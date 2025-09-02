@@ -1,0 +1,18 @@
+[theme]
+# Light, artisan-inspired palette
+base = "light"
+
+# Warm Terracotta (primary accent – buttons, highlights)
+primaryColor = "#d97706"   # warm amber
+
+# Soft Beige background (neutral, doesn't clash with content)
+backgroundColor = "#e4be88ff"  
+
+# Muted Sage Green (sidebar / secondary panels)
+secondaryBackgroundColor = "#c9e4ca"  
+
+# Rich Dark Brown (for text – warmer than navy, artisan vibe)
+textColor = "#3b2f2f"  
+
+# Creative and readable font
+font = "serif"

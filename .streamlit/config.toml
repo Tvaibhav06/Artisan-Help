@@ -12,7 +12,7 @@ backgroundColor = "#e4be88ff"
 secondaryBackgroundColor = "#c9e4ca"  
 
 # Rich Dark Brown (for text – warmer than navy, artisan vibe)
-textColor = "#3b2f2f"  
+textColor = "#742727ff"  
 
 # Creative and readable font
 font = "serif"

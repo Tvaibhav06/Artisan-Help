@@ -6,6 +6,7 @@ import io
 import json
 import os
 import re
+from urllib.parse import urlencode
 
 # Imports for robust authentication
 import google.auth
@@ -187,6 +188,7 @@ def get_gemini_model():
 
 @st.cache_resource
 def get_imagen_model():
+    # If you want to try alternate model ids or handle preview errors, modify this function
     return ImageGenerationModel.from_pretrained("imagegeneration@006")
 
 # --- 3. PAGE CONFIGURATION & THEME (Pottery Theme) ---
@@ -197,7 +199,7 @@ st.set_page_config(
     layout="wide",
 )
 
-# Inlined Base64 SVG for a subtle, artisanal background pattern
+# Inlined Base64 SVG for a subtle, artisanal background pattern & CSS variables
 pottery_theme_css = """
 <style>
     :root {
@@ -205,40 +207,47 @@ pottery_theme_css = """
         --background-color: #FDF5E6;
         --sidebar-background: #EADDC5;
         --primary-text-color: #5D4037;
-        --accent-color: #BF5700;
-        --accent-hover-color: #A64B00;
+        --accent-color: #d46c04;
+        --accent-hover-color: #d77c02;
         --widget-background: #FFFFFF;
         --border-color: #D7CCC8;
         --border-radius: 12px;
         --shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
         --background-image-url: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+IDxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNGREY1RTYiLz4gPGcgb3BhY2l0eT0iMC4xIiBmaWxsPSJub25lIiBzdHJva2U9IiM1RDQwMzciIHN0cm9rZS13aWR0aD0iMSI+IDxwYXRoIGQ9Ik0gMjAgMjAgQyAyNSAyNSwgMzAgNDAsIDI1IDUwIFMyMCA3NSwgMzAgODAgIi8+IDxwYXRoIGQ9Ik0gODAgMjAgQyA3NSA0MCwgNzAgNDAsIDc1IDUwIFM4MCA3NSwgNzAgODAgIi8+IDxwYXRoIGQ9Ik0gNTAgMTUgQyA1NSAzMCwgNDUgMzAsIDUwIDQ1IFM1NSA3NSwgNTAgODUgIi8+IDxwYXRoIGQ9Ik0gNSAxMCBMIDUgOTAgIi8+IDxwYXRoIGQ9Ik0gOTUgMTAgTCA5NSA5MCAiLz4gPC9nPjwvc3ZnPg==");
     }
+
     .stApp {
         background-color: var(--background-color);
         background-image: var(--background-image-url);
         background-attachment: fixed;
         color: var(--primary-text-color);
     }
+
     h1, h2, h3, h4, h5, h6, .stMarkdown, label, p, .stAlert, [data-baseweb="tab"] {
         color: var(--primary-text-color) !important;
         font-family: var(--font);
     }
+
     p, li, div, label, .stMarkdown {
         font-size: 1.1rem;
     }
+
     [data-testid="stSidebar"] {
         background-color: var(--sidebar-background);
         border-right: 1px solid var(--border-color);
     }
+
     [data-testid="stHeader"] {
         background-color: rgba(253, 245, 230, 0.8);
         backdrop-filter: blur(10px);
         box-shadow: none;
         border-bottom: 1px solid var(--border-color);
     }
+
     .stSelectbox, .stTextInput, .stTextArea, .stFileUploader, .stMultiSelect {
         border-radius: var(--border-radius);
     }
+
     .stSelectbox > div > div, .stTextInput > div > div, .stTextArea > div > div, .stFileUploader > div > div {
         background-color: var(--widget-background);
         border: 1px solid var(--border-color);
@@ -246,11 +255,13 @@ pottery_theme_css = """
         box-shadow: var(--shadow);
         color: var(--primary-text-color);
     }
+
     .stSelectbox div[role="listbox"] {
         background-color: var(--widget-background);
         border-radius: var(--border-radius);
         border: 1px solid var(--border-color);
     }
+
     .stButton > button {
         background-color: var(--accent-color);
         color: white;
@@ -262,13 +273,16 @@ pottery_theme_css = """
         box-shadow: var(--shadow);
         transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
     }
+
     .stButton > button:hover {
         background-color: var(--accent-hover-color);
         transform: scale(1.02);
     }
+
     .stButton > button:active {
         transform: scale(0.98);
     }
+
     .stTabs [data-baseweb="tab-list"] { gap: 8px; }
     .stTabs [data-baseweb="tab"] {
         background-color: transparent;
@@ -276,11 +290,13 @@ pottery_theme_css = """
         border-bottom: 2px solid var(--border-color);
         padding: 10px 16px;
     }
+
     .stTabs [aria-selected="true"] {
         background-color: var(--widget-background);
         border-bottom: 2px solid var(--accent-color);
         box-shadow: var(--shadow);
     }
+
     .stCodeBlock, .st-emotion-cache-1f2d20p {
         background-color: #F5F0E8;
         color: var(--primary-text-color);
@@ -289,6 +305,7 @@ pottery_theme_css = """
         padding: 1rem;
         font-size: 1rem !important;
     }
+
     .stAlert {
         border-radius: var(--border-radius);
         box-shadow: var(--shadow);
@@ -509,7 +526,6 @@ with st.sidebar:
     st.markdown("---")
     
     if st.button(t('clear_button', page_language), on_click=clear_results, use_container_width=True):
-        # st.rerun() is an available function in many Streamlit versions; keep as-is.
         try:
             st.rerun()
         except Exception:
@@ -523,32 +539,44 @@ if not st.session_state.selected_workflow:
     with col1:
         if st.button(t('path_option_1', page_language), key="landing_p1", use_container_width=True):
             st.session_state.selected_workflow = t('workflow_option_1', page_language)
-            # try to rerun if available, otherwise continue (Streamlit will usually rerun automatically)
             try:
-                st.rerun()
+                # prefer experimental_rerun where available
+                st.experimental_rerun()
             except Exception:
-                pass
+                try:
+                    st.rerun()
+                except Exception:
+                    pass
         st.write("")
         if st.button(t('path_option_3', page_language), key="landing_p3", use_container_width=True):
             st.session_state.selected_workflow = t('workflow_option_3', page_language)
             try:
-                st.rerun()
+                st.experimental_rerun()
             except Exception:
-                pass
+                try:
+                    st.rerun()
+                except Exception:
+                    pass
     with col2:
         if st.button(t('path_option_2', page_language), key="landing_p2", use_container_width=True):
             st.session_state.selected_workflow = t('workflow_option_2', page_language)
             try:
-                st.rerun()
+                st.experimental_rerun()
             except Exception:
-                pass
+                try:
+                    st.rerun()
+                except Exception:
+                    pass
         st.write("")
         if st.button(t('path_option_4', page_language), key="landing_p4", use_container_width=True):
             st.session_state.selected_workflow = t('workflow_option_4', page_language)
             try:
-                st.rerun()
+                st.experimental_rerun()
             except Exception:
-                pass
+                try:
+                    st.rerun()
+                except Exception:
+                    pass
 
     st.markdown("---")
     st.info(t('info_box', page_language))
@@ -558,7 +586,6 @@ if not st.session_state.selected_workflow:
 workflow = st.session_state.selected_workflow
 
 # --- MAIN CONTENT & ACTION BUTTONS ---
-#st.markdown("---", help="Separator")
 
 # Create a merged, extended region list (old list + craft hubs)
 EXTENDED_REGION_OPTIONS = [
@@ -650,7 +677,7 @@ EXTENDED_REGION_OPTIONS = [
     "Kota Doria / Kota (Textiles)",
     "Bikaner (Cane, leather, metalwork)",
     "Sualkuchi (Silk weaving, Assam)",
-    "Salarpuria / small craft towns",  # placeholder if you want to add more
+    "Salarpuria / small craft towns",
     # Fallback
     t('other_option', page_language)
 ]
@@ -919,3 +946,106 @@ elif st.session_state.get('growth_plan'):
 
 else:
     st.info(t('info_box', page_language))
+# ------------------- CHATBOT ASSISTANT (ICON + EXPANDABLE CHAT) -------------------
+import streamlit as st
+
+# Initialize state
+if "chat_messages" not in st.session_state:
+    st.session_state["chat_messages"] = [
+        {"role": "assistant", "content": "👋 Hi! I'm your Artisan Assistant. Click below to ask me anything."}
+    ]
+if "show_chat" not in st.session_state:
+    st.session_state["show_chat"] = False
+
+# Custom CSS for floating button + chat window
+st.markdown(
+    """
+    <style>
+    .chat-icon {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background-color: #c77e2f;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        text-align: center;
+        font-size: 30px;
+        color: white;
+        cursor: pointer;
+        box-shadow: 0px 4px 12px rgba(0,0,0,0.2);
+        z-index: 10000;
+        line-height: 60px;
+    }
+    .chat-box {
+        position: fixed;
+        bottom: 90px;
+        right: 20px;
+        width: 320px;
+        height: 420px;
+        background: #fff8f0;
+        border: 2px solid #c77e2f;
+        border-radius: 16px;
+        box-shadow: 0px 4px 12px rgba(0,0,0,0.15);
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    .chat-messages {
+        padding: 10px;
+        overflow-y: auto;
+        flex-grow: 1;
+    }
+    .chat-input {
+        border-top: 1px solid #ddd;
+        padding: 8px;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+# Floating chat icon
+if not st.session_state["show_chat"]:
+    if st.button("💬", key="open_chat", help="Chat with assistant"):
+        st.session_state["show_chat"] = True
+        st.rerun()
+else:
+    # Chatbox
+    with st.container():
+        st.markdown('<div class="chat-box">', unsafe_allow_html=True)
+
+        # Messages area
+        st.markdown('<div class="chat-messages">', unsafe_allow_html=True)
+        for msg in st.session_state["chat_messages"]:
+            with st.chat_message(msg["role"]):
+                st.markdown(msg["content"])
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        # Input area
+        user_input = st.chat_input("Type your message...")
+        if user_input:
+            st.session_state["chat_messages"].append({"role": "user", "content": user_input})
+
+            # Rule-based replies (can be swapped with Gemini)
+            if "image" in user_input.lower():
+                response = "🖼 You can generate images in **Generate Content & Image**."
+            elif "upload" in user_input.lower():
+                response = "📸 Use **Upload an Image & Generate Content** to work with photos."
+            elif "trend" in user_input.lower():
+                response = "📊 Check **Discover Market Trends** for regional insights."
+            elif "growth" in user_input.lower():
+                response = "🚀 Go to **Create a Growth Plan** to grow your craft journey."
+            else:
+                response = "🤝 I'm here to help! Ask about image generation, uploading, trends, or growth."
+
+            st.session_state["chat_messages"].append({"role": "assistant", "content": response})
+            st.rerun()
+
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    # Close button
+    if st.button("❌", key="close_chat", help="Close chat"):
+        st.session_state["show_chat"] = False
+        st.rerun()
